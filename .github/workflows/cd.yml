@@ -1,0 +1,36 @@
+name: CD
+
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - main
+      - master
+
+jobs:
+  deploy:
+    name: Deploy Release
+    if: github.event.pull_request.merged == true && github.event.pull_request.head.ref == 'development'
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: main
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      
+      - name: Run tests
+        run: |
+          pip install pytest pytest-cov
+          pytest -q --cov=. --cov-report=term --cov-report=html
+      
+      - name: Build package
+        run: |
+          pip install build
+          python -m build
+      
