@@ -4,11 +4,11 @@ on:
   pull_request:
     types: [closed]
     branches:
-      - master
+      - main
 
 jobs:
   run-tests-and-deploy:
-    if: github.event.pull_request.merged == true && github.event.pull_request.head.ref == 'development'
+    if: github.event.pull_request.merged == true && github.event.pull_request.head.ref == 'dev'
     runs-on: ubuntu-latest
     permissions:
       pages: write
