@@ -2,46 +2,44 @@ name: CI
 
 on:
   push:
-    branches: [ development ]
-
+    branches: 
+      - development
+  pull_request:
+    branches:
+      - development
+      - master
 
 jobs:
-  test:
-    name: Run Tests
+  run-tests:
     runs-on: ubuntu-latest
     
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
       
-      # Set up Python
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: "3.10"
       
       - name: Install dependencies
         run: |
-          pip install pytest pytest-cov
+          pip install -r requirements.txt
       
       - name: Run basic tests
         run: pytest -q
-
+      
       - name: Run tests with coverage
         run: |
           pytest -q \
             --cov=. \
             --cov-report=term \
             --cov-report=xml \
-            --cov-report=html \
-
-      - name: Prepare the webpage
-        run: |
-          mkdir sites
-          mv htmlcov sites/
-          mv coverage.xml sites/
-
-      - name: upload the artifacts
-        uses: actions/upload-pages-artifact@v4
+            --cov-report=html
+      
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
         with:
-          path: ./sites
+          name: coverage-report
+          path: htmlcov/

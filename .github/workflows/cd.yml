@@ -4,33 +4,52 @@ on:
   pull_request:
     types: [closed]
     branches:
-      - main
       - master
 
 jobs:
-  deploy:
-    name: Deploy Release
+  run-tests-and-deploy:
     if: github.event.pull_request.merged == true && github.event.pull_request.head.ref == 'development'
     runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
     
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          ref: main
+          ref: master
       
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: "3.10"
       
-      - name: Run tests
+      - name: Install dependencies
         run: |
-          pip install pytest pytest-cov
-          pytest -q --cov=. --cov-report=term --cov-report=html
+          pip install -r requirements.txt
       
-      - name: Build package
+      - name: Run basic tests
+        run: pytest -q
+      
+      - name: Run tests with coverage
         run: |
-          pip install build
-          python -m build
+          pytest -q \
+            --cov=. \
+            --cov-report=term \
+            --cov-report=xml \
+            --cov-report=html
       
+      - name: Prepare the webpage
+        run: |
+          mkdir sites
+          mv htmlcov sites/
+          mv coverage.xml sites/
+      
+      - name: Upload artifacts to GitHub Pages
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: ./sites
+      
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v4
